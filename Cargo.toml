@@ -1,0 +1,37 @@
+# 名前変える
+[package]
+name = "dysy"
+version = "0.0.1"
+authors = ["taka8"]
+edition = "2021"
+
+
+[dependencies]
+egui = "0.27.0"
+eframe = { version = "0.27.0", default-features = false, features = [
+    "default_fonts", # Embed the default egui fonts.
+    "glow",          # Use the glow rendering backend. Alternative: "wgpu".
+    "persistence",   # Enable restoring app state when restarting the app.
+] }
+# egui_extras = {version = "*", features = ["default", "image"] }
+log = "0.4"
+
+serde = { version = "1", features = ["derive"] }
+# itertools = "0.12"
+num-complex = "0.4"
+image = { version = "0.25.1", features = ["rayon"] }
+rand = "0.8.5"
+rfd = "0.14"
+
+# native:
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+env_logger = "0.10"
+
+
+[profile.release]
+opt-level = 3
+strip = true
+
+# Optimize all dependencies even in debug builds:
+[profile.dev.package."*"]
+opt-level = 3
