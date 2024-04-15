@@ -1,6 +1,5 @@
-use std::path::PathBuf;
 use rand::{thread_rng, Rng};
-use image::{RgbImage, Rgb, DynamicImage, error::ImageResult};
+use image::{RgbImage, Rgb, DynamicImage};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
@@ -110,7 +109,7 @@ impl Attractor for Lorenz {
         self.state.time += dt;
     }
 
-    fn gen_img(&mut self, n: usize, w: i64, h: i64, plt: &Palette) -> DynamicImage {
+    fn gen_img(&mut self, n: usize, w: usize, h: usize, plt: &Palette) -> DynamicImage {
         let skip = 0;
         let (top, left, bottom, right) = self.search_edges(100000.max(n/10), skip);
 
@@ -118,32 +117,28 @@ impl Attractor for Lorenz {
         let hc = (bottom + top) * 0.5;
         let m = (w as f64 / (right - left)).min(h as f64 / (bottom - top));
 
-        let mut hist = vec![vec![0.0; w as usize]; h as usize];
+        let mut hist = vec![0.0; w * h];
         let mut mx_its = 0.0f64;
         self.state.set_init();
+        let (iw, ih) = (w as i64, h as i64);
         for i in 0..n {
             self.apply_map_func();
             if i < skip {continue;}
             let (x, _, z) = self.state.get_xyz();
-            let tw = (((x - wc) * m).round() as i64 + w/2).clamp(0, w-1) as usize;
-            let th = (((z - hc) * m).round() as i64 + h/2).clamp(0, h-1) as usize;
-            let val = &mut hist[th][tw];
+            let tw = (((x - wc) * m).round() as i64 + iw/2).clamp(0, iw-1) as usize;
+            let th = (((z - hc) * m).round() as i64 + ih/2).clamp(0, ih-1) as usize;
+            let val = &mut hist[th * w + tw];
             *val += 1.0;
             mx_its = mx_its.max(*val);
         }
 
         let factor = (10_000_000.0 / (n as f64)).sqrt() * ((w * h) as f64) / (1024.0 * 1024.0) * 100.;
         let img = RgbImage::from_par_fn(w as u32, h as u32, |x, y| {
-            let v = hist[y as usize][x as usize];
-            let (r, g, b) = plt.get_col(v / mx_its , v/ mx_its, factor);
+            let v = hist[(y as usize) * w + (x as usize)];
+            let (r, g, b) = plt.get_col(v / mx_its, v / mx_its, factor);
             Rgb([r, g, b])
         }); 
 
         DynamicImage::ImageRgb8(img)
-    }
-
-    fn save_img(&mut self, path: &PathBuf, n: usize, w: i64, h: i64, plt: &Palette) -> ImageResult<()> {
-        let img = self.gen_img(n, w, h, plt);
-        img.save(path)
     }
 }

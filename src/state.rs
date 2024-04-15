@@ -4,10 +4,10 @@ pub struct State {
     n: usize,
     x: Vec<f64>,
     init_x: Vec<f64>,
-    x_range: std::ops::RangeInclusive<f64>, //speed *0.01
+    x_range: std::ops::RangeInclusive<f64>,
     pub time: f64,
-    dt: Option<f64>, // step
-    dt_range: Option<f64>, //speed *0.01
+    dt: Option<f64>,
+    dt_range: Option<f64>,
 }
 
 impl Default for State {

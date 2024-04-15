@@ -21,3 +21,6 @@ pub use symmetric::Symmetric;
 
 pub mod polar;
 pub use polar::Polar;
+
+pub mod double_pendulum;
+pub use double_pendulum::DoublePendulum;

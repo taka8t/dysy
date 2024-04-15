@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use image::{DynamicImage, error::ImageResult};
 use crate::util::Palette;
 use crate::state::State;
@@ -6,8 +7,11 @@ use crate::state::State;
 pub trait Attractor {
     fn apply_map_func(&mut self);
     // trajectory image
-    fn gen_img(&mut self, n: usize, w: i64, h: i64, plt: &Palette) -> DynamicImage;
-    fn save_img(&mut self, file: &std::path::PathBuf, n: usize, w: i64, h: i64, plt: &Palette) -> ImageResult<()>;
+    fn gen_img(&mut self, n: usize, w: usize, h: usize, plt: &Palette) -> DynamicImage;
+    fn save_img(&mut self, path: &PathBuf, n: usize, w: usize, h: usize, plt: &Palette) -> ImageResult<()> {
+        let img = self.gen_img(n, w, h, plt);
+        img.save(path)
+    }
     fn name(&self) -> &str;
     fn map_str(&self) -> &str;
     fn speeds(&self) -> Vec<f64>;

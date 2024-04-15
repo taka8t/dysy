@@ -1,4 +1,4 @@
-use crate::attractors::{Attractor, Trigonometric, Clifford, Quadratic, Symmetric, Polar, Duffing, Lorenz};
+use crate::attractors::{Attractor, Trigonometric, Clifford, Quadratic, Symmetric, Polar, Duffing, Lorenz, DoublePendulum};
 use crate::util;
 use image::{EncodableLayout, DynamicImage};
 use std::time;
@@ -11,7 +11,8 @@ enum Enum {
     Symmetric,
     Polar,
     Duffing,
-    Lorenz
+    Lorenz,
+    DoublePendulum
 }
 
 pub struct MyApp {
@@ -103,6 +104,10 @@ impl eframe::App for MyApp {
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Lorenz, "Lorentz").clicked() {
                     self.set_attractor(Box::new(Lorenz::default()));
+                    self.is_changed |= true;
+                }
+                if ui.selectable_value(&mut self.selected_attractor, Enum::DoublePendulum, "DoublePendulum").clicked() {
+                    self.set_attractor(Box::new(DoublePendulum::default()));
                     self.is_changed |= true;
                 }
             });
