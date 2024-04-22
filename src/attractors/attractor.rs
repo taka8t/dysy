@@ -21,4 +21,5 @@ pub trait Attractor {
     fn coef_ranges(&self) -> Vec<std::ops::RangeInclusive<f64>>;
     fn state(&self) -> &State;
     fn state_mut(&mut self) -> &mut State;
+    fn param_changed(&mut self, flag: bool);
 }

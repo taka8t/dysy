@@ -16,7 +16,6 @@ enum Enum {
 }
 
 pub struct MyApp {
-    is_changed: bool,
     num_iter_low: usize,
     num_iter_high: usize,
     attractor: Box<dyn Attractor>,
@@ -31,7 +30,6 @@ pub struct MyApp {
 impl Default for MyApp {
     fn default() -> Self {
         Self {
-            is_changed: false,
             num_iter_low: 100000,
             num_iter_high: 10000000,
             attractor: Box::new(Trigonometric::default()),
@@ -57,7 +55,8 @@ impl MyApp {
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        self.is_changed = false;
+        let mut param_changed = false;
+        let mut color_changed = false;
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 let is_web = cfg!(target_arch = "wasm32");
@@ -75,40 +74,41 @@ impl eframe::App for MyApp {
             ui.heading("attractor generator egui");
             ui.separator();
 
+            // todo: 項目別に分ける
             egui::ComboBox::from_label("Select Attractor")
             .selected_text(format!("{:?}", self.selected_attractor))
             .show_ui(ui, |ui| {
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Trigonometric, "Trigonometric").clicked() {
                     self.set_attractor(Box::new(Trigonometric::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Clifford, "Clifford").clicked() {
                     self.set_attractor(Box::new(Clifford::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Quadratic, "Quadratic").clicked() {
                     self.set_attractor(Box::new(Quadratic::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Symmetric, "Symmetric").clicked() {
                     self.set_attractor(Box::new(Symmetric::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Polar, "Polar").clicked() {
                     self.set_attractor(Box::new(Polar::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Duffing, "Duffing").clicked() {
                     self.set_attractor(Box::new(Duffing::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Lorenz, "Lorentz").clicked() {
                     self.set_attractor(Box::new(Lorenz::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::DoublePendulum, "DoublePendulum").clicked() {
                     self.set_attractor(Box::new(DoublePendulum::default()));
-                    self.is_changed |= true;
+                    param_changed |= true;
                 }
             });
 
@@ -117,49 +117,45 @@ impl eframe::App for MyApp {
         });
 
         egui::SidePanel::right("palette param").show(ctx, |ui| {
-            let mut changed_right = false;
-
             ui.label("palette param");
             
             if ui.add(egui::Button::new("Randomize")).clicked() {
                 self.palette.change_random();
-                changed_right |= true;
+                color_changed |= true;
             }
 
             ui.label("R:");
             ui.horizontal(|ui|{
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.r.0).clamp_range(0.5..=1.0).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.r.1).clamp_range(0.0..=0.5).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.r.2).clamp_range(0.5..=1.5).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.r.3).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.r.0).clamp_range(0.5..=1.0).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.r.1).clamp_range(0.0..=0.5).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.r.2).clamp_range(0.5..=1.5).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.r.3).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01)).changed();
             });
             ui.label("G:");
             ui.horizontal(|ui|{
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.g.0).clamp_range(0.5..=1.0).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.g.1).clamp_range(0.0..=0.5).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.g.2).clamp_range(0.5..=1.5).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.g.3).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.g.0).clamp_range(0.5..=1.0).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.g.1).clamp_range(0.0..=0.5).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.g.2).clamp_range(0.5..=1.5).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.g.3).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01)).changed();
             });
             ui.label("B:");
             ui.horizontal(|ui|{
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.b.0).clamp_range(0.5..=1.0).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.b.1).clamp_range(0.0..=0.5).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.b.2).clamp_range(0.5..=1.5).fixed_decimals(2).speed(0.01)).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.b.3).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.b.0).clamp_range(0.5..=1.0).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.b.1).clamp_range(0.0..=0.5).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.b.2).clamp_range(0.5..=1.5).fixed_decimals(2).speed(0.01)).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.b.3).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01)).changed();
             });
             ui.label("color variation:");
             ui.horizontal(|ui|{
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.colver1).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01).prefix("var1: ")).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.colver2).clamp_range(0.0..=8.0).fixed_decimals(2).speed(0.02).prefix("var2: ")).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.colver1).clamp_range(0.0..=1.0).fixed_decimals(2).speed(0.01).prefix("var1: ")).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.colver2).clamp_range(0.0..=8.0).fixed_decimals(2).speed(0.02).prefix("var2: ")).changed();
                 
             });
             ui.label("color brightness:");
             ui.horizontal(|ui|{
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.brightness1).clamp_range(0.0..=2.0).fixed_decimals(2).speed(0.01).prefix("value1: ")).changed();
-                changed_right |= ui.add(egui::DragValue::new(&mut self.palette.brightness2).clamp_range(1.0..=100.0).fixed_decimals(1).speed(0.2).prefix("value2: ")).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.brightness1).clamp_range(0.0..=2.0).fixed_decimals(2).speed(0.01).prefix("value1: ")).changed();
+                color_changed |= ui.add(egui::DragValue::new(&mut self.palette.brightness2).clamp_range(1.0..=100.0).fixed_decimals(1).speed(0.2).prefix("value2: ")).changed();
             });
-
-            self.is_changed |= changed_right;
         });
 
         // todo: add fix zero
@@ -224,9 +220,12 @@ impl eframe::App for MyApp {
                 ).changed();
             }
 
-            self.is_changed |= changed_left;
+            param_changed |= changed_left;
         });
 
+        if param_changed {
+            self.attractor.param_changed(true);
+        }
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui|{
                 ui.add(
@@ -242,10 +241,12 @@ impl eframe::App for MyApp {
                     self.elapsed = start.elapsed();
                     self.tex_handle_high = Some(ctx.load_texture("high_image", image, Default::default()));
                     self.open_window = true;
+                    self.attractor.param_changed(false);
                 }
             });
             
-            if self.is_changed && !self.open_window {
+            if (param_changed || color_changed) && !self.open_window {
+                self.attractor.param_changed(true);
                 let image = image2texture(
                     self.attractor.gen_img(self.num_iter_low, 512, 512, &self.palette)
                 );
@@ -269,6 +270,7 @@ impl eframe::App for MyApp {
                     );
                     self.elapsed = start.elapsed();
                     self.tex_handle_high = Some(ctx.load_texture("high_image", image, Default::default()));
+                    self.attractor.param_changed(false);
                 }
                 ui.label(format!("{:.3} sec", self.elapsed.as_secs_f32()));
                 

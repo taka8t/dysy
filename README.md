@@ -43,6 +43,7 @@ This will launch the Egui-based GUI, where you can interact with the application
 
 ## Future Plans
 
+- save parameter and load parameter
 - Implement the ability to load a custom dynamic system from a configuration file
 - Add examples of dynamic systems (Double pendulum etc...)
 - Image generation feature that represents characteristics other than trajectories

@@ -12,7 +12,9 @@ pub struct Symmetric {
     pub range: Vec<std::ops::RangeInclusive<f64>>,
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
-    pub state: State
+    pub state: State,
+    pub img_vec: Vec<f64>,
+    pub param_changed: bool,
 }
 
 impl Default for Symmetric {
@@ -28,7 +30,9 @@ impl Default for Symmetric {
             range: range,
             speeds: vec![1.0, 0.001, 0.001, 0.001, 0.001, 0.001],
             coefs: vec![3.0, 2.0, -2.0, 0.0, 0.0, 0.0],
-            state: State::new(2, -1.0..=1.0, None)
+            state: State::new(2, -1.0..=1.0, None),
+            img_vec: vec![],
+            param_changed: true
         }
     }
 }
@@ -54,7 +58,9 @@ impl Symmetric {
             range: range.clone(),
             speeds: vec![1.0, 0.001, 0.001, 0.001, 0.001, 0.001],
             coefs: coefs,
-            state: State::new(2, -1.0..=1.0, None)
+            state: State::new(2, -1.0..=1.0, None),
+            img_vec: vec![],
+            param_changed: true
         }
     }
 
@@ -72,6 +78,32 @@ impl Symmetric {
         }
         self.state.set_init();
         (top, left, bottom, right)
+    }
+
+    fn gen_hist(&mut self, n: usize, w: usize, h: usize) {
+        let skip = 500;
+        let (top, left, bottom, right) = self.search_edges(50000, skip);
+
+        let wc = (right + left) * 0.5;
+        let hc = (bottom + top) * 0.5;
+        let m = (w as f64 / (right - left)).min(h as f64 / (bottom - top));
+
+        let mut hist = vec![0.0; w * h];
+        let mut mx_its = 0.0f64;
+        self.state.set_init();
+        let (iw, ih) = (w as i64, h as i64);
+        for i in 0..n {
+            self.apply_map_func();
+            if i < skip {continue;}
+            let (x, y) = self.state.get_xy();
+            let tw = (((x - wc) * m).round() as i64 + iw/2).clamp(0, iw-1) as usize;
+            let th = (((y - hc) * m).round() as i64 + ih/2).clamp(0, ih-1) as usize;
+            let val = &mut hist[th * w + tw];
+            *val += 1.0;
+            mx_its = mx_its.max(*val);
+        }
+        let inv_mx_its = 1.0 / mx_its;
+        self.img_vec = hist.into_iter().map(|v| v * inv_mx_its).collect::<Vec<_>>();
     }
 }
 impl Attractor for Symmetric {
@@ -110,7 +142,9 @@ impl Attractor for Symmetric {
             .for_each(|(x, r)| *x = rng.gen_range(r));
         self.coefs = coefs;
     }
-
+    fn param_changed(&mut self, flag: bool) {
+        self.param_changed = flag;
+    }
     fn apply_map_func(&mut self) {
         let (x, y) = self.state.get_xy();
         let z = Complex::new(x, y);
@@ -127,32 +161,14 @@ impl Attractor for Symmetric {
     }
 
     fn gen_img(&mut self, n: usize, w: usize, h: usize, plt: &Palette) -> DynamicImage {
-        let skip = 500;
-        let (top, left, bottom, right) = self.search_edges(50000, skip);
-
-        let wc = (right + left) * 0.5;
-        let hc = (bottom + top) * 0.5;
-        let m = (w as f64 / (right - left)).min(h as f64 / (bottom - top));
-
-        let mut hist = vec![0.0; w * h];
-        let mut mx_its = 0.0f64;
-        self.state.set_init();
-        let (iw, ih) = (w as i64, h as i64);
-        for i in 0..n {
-            self.apply_map_func();
-            if i < skip {continue;}
-            let (x, y) = self.state.get_xy();
-            let tw = (((x - wc) * m).round() as i64 + iw/2).clamp(0, iw-1) as usize;
-            let th = (((y - hc) * m).round() as i64 + ih/2).clamp(0, ih-1) as usize;
-            let val = &mut hist[th * w + tw];
-            *val += 1.0;
-            mx_its = mx_its.max(*val);
+        if self.param_changed {
+            self.gen_hist(n, w, h);
         }
 
         let factor = (10_000_000.0 / (n as f64)).sqrt() * ((w * h) as f64) / (1024.0 * 1024.0) * 100.;
         let img = RgbImage::from_par_fn(w as u32, h as u32, |x, y| {
-            let v = hist[(y as usize) * w + (x as usize)];
-            let (r, g, b) = plt.get_col(v / mx_its, v / mx_its, factor);
+            let v = self.img_vec[(y as usize) * w + (x as usize)];
+            let (r, g, b) = plt.get_col(v, v, factor);
             Rgb([r, g, b])
         }); 
 
