@@ -1,5 +1,6 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
@@ -7,6 +8,7 @@ use crate::state::State;
 
 use std::f64::consts::TAU;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DoublePendulum {
     pub name: String,
     pub map_str: String,
@@ -14,7 +16,9 @@ pub struct DoublePendulum {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -26,7 +30,7 @@ impl Default for DoublePendulum {
         Self {
             name: "DoublePendulum".into(),
             map_str: "Runge Kutta4 theta: a0, a1, omega: a2, a3, length: x0, x1, mass: x2, x3, g: x4".into(),
-            range: range,
+            range,
             speeds: vec![0.001; 5],
             coefs: vec![1.0, 1.0, 1.0, 1.0, 9.8],
             state: State::new(4, -TAU..=TAU, Some(0.0005)),

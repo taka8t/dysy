@@ -1,10 +1,12 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
 use crate::state::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Clifford {
     pub name: String,
     pub map_str: String,
@@ -12,7 +14,9 @@ pub struct Clifford {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -25,7 +29,7 @@ impl Default for Clifford {
         Self {
             name: "Clifford Attractor".into(),
             map_str: "x = a0 * sin(a1 * y) + a2 * cos(a3 * x), y = a4 * sin(a5 * x) + a6 * cos(a7 * y)".into(),
-            range: range,
+            range,
             speeds: vec![0.001; 8],
             coefs: vec![1.0; 8],
             state: State::new(2, -2.0..=2.0, None),

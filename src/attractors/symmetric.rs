@@ -1,11 +1,13 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
 use num_complex::Complex;
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
 use crate::state::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Symmetric {
     pub name: String,
     pub map_str: String,
@@ -13,7 +15,9 @@ pub struct Symmetric {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -27,7 +31,7 @@ impl Default for Symmetric {
         Self {
             name: "Symmetric Attractor".into(),
             map_str: "z = (a1 + a2 * |z|^2 + a3 * (z^a0).real + a4 * zi) * z +  a5 * z^(a0 - 1) (symmetry if a4 == 0)".into(),
-            range: range,
+            range,
             speeds: vec![1.0, 0.001, 0.001, 0.001, 0.001, 0.001],
             coefs: vec![3.0, 2.0, -2.0, 0.0, 0.0, 0.0],
             state: State::new(2, -1.0..=1.0, None),
@@ -57,7 +61,7 @@ impl Symmetric {
             map_str: "z = (a1 + a2 * |z|^2 + a3 * (z^a0).real + a4 * zi) * z +  a5 * z^(a0 - 1) (symmetry if a4 == 0)".into(),
             range: range.clone(),
             speeds: vec![1.0, 0.001, 0.001, 0.001, 0.001, 0.001],
-            coefs: coefs,
+            coefs,
             state: State::new(2, -1.0..=1.0, None),
             img_vec: vec![],
             param_changed: true

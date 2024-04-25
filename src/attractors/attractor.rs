@@ -4,7 +4,7 @@ use crate::util::Palette;
 use crate::state::State;
 
 // dynamical system trajectory generator analyzer
-pub trait Attractor {
+pub trait Attractor: erased_serde::Serialize {
     fn apply_map_func(&mut self);
     // trajectory image
     fn gen_img(&mut self, n: usize, w: usize, h: usize, plt: &Palette) -> DynamicImage;
@@ -23,3 +23,5 @@ pub trait Attractor {
     fn state_mut(&mut self) -> &mut State;
     fn param_changed(&mut self, flag: bool);
 }
+
+erased_serde::serialize_trait_object!(Attractor);

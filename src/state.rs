@@ -1,5 +1,7 @@
 use rand::{thread_rng, Rng};
+use serde::{Serialize, Deserialize};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct State {
     n: usize,
     x: Vec<f64>,
@@ -27,13 +29,13 @@ impl Default for State {
 impl State {
     pub fn new(n: usize, range: std::ops::RangeInclusive<f64>, t: Option<f64>) -> Self {
         Self {
-            n: n,
+            n,
             x: vec![0.5; n],
             init_x: vec![0.5; n],
             x_range: range,
             time: 0.0,
             dt: t,
-            dt_range: if let Some(t) = t {Some(t*100.0)} else {None},
+            dt_range: t.map(|t| t * 100.0),
         }
     }
     pub fn set_init(&mut self) {

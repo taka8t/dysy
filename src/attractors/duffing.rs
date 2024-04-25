@@ -1,10 +1,12 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
 use crate::state::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Duffing {
     pub name: String,
     pub map_str: String,
@@ -12,7 +14,9 @@ pub struct Duffing {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -24,7 +28,7 @@ impl Default for Duffing {
         Self {
             name: "Duffing Attractor".into(),
             map_str: "dx/dt = y, dy/dt = x - x^3 + a0 * y + a1 * cos(a2 * t)".into(),
-            range: range,
+            range,
             speeds: vec![0.001; 3],
             coefs: vec![0.5; 3],
             state: State::new(2, -1.0..=1.0, Some(0.0005)),

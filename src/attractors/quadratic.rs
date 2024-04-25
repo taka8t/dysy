@@ -1,10 +1,12 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
 use crate::state::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Quadratic {
     pub name: String,
     pub map_str: String,
@@ -12,7 +14,9 @@ pub struct Quadratic {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -25,7 +29,7 @@ impl Default for Quadratic {
         Self {
             name: "Quadratic Attractor".into(),
             map_str: "x = a0 * x^2 + a1 * x + a2 * x * y + a3 * y + a4 * y^2 + a5, y = a6 * x^2 + a7 * x + a8 * x * y + a9 * y + a10 * y^2 + a11".into(),
-            range: range,
+            range,
             speeds: vec![0.001; 12],
             coefs: vec![1.0; 12],
             state: State::new(2, -1.0..=1.0, None),

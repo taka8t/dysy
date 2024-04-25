@@ -1,7 +1,12 @@
 use crate::attractors::{Attractor, Trigonometric, Clifford, Quadratic, Symmetric, Polar, Duffing, Lorenz, DoublePendulum};
 use crate::util;
 use image::{EncodableLayout, DynamicImage};
+use serde_json::{Value};
+use anyhow::{Result, anyhow};
 use std::time;
+use std::path::PathBuf;
+use std::fs;
+use std::io::{BufWriter, Write, BufReader};
 
 #[derive(Debug, PartialEq)]
 enum Enum {
@@ -32,7 +37,7 @@ impl Default for MyApp {
         Self {
             num_iter_low: 100000,
             num_iter_high: 10000000,
-            attractor: Box::new(Trigonometric::default()),
+            attractor: Box::<Trigonometric>::default(),
             selected_attractor: Enum::Trigonometric,
             palette: util::Palette::default(),
             open_window: false,
@@ -50,6 +55,55 @@ impl MyApp {
     
     fn set_attractor(&mut self, at: Box<dyn Attractor> ) {
         self.attractor = at;
+    }
+
+    fn save_params(&self, path: &PathBuf) -> std::io::Result<()> {
+        let file = fs::File::create(path)?;
+        let mut writer = BufWriter::new(file);
+        serde_json::to_writer(&mut writer, &self.attractor)?;
+        writer.flush()?;
+        Ok(())
+    }
+
+    fn load_params(&mut self, path: &PathBuf) -> Result<()> {
+        let file = fs::File::open(path)?;
+        let reader = BufReader::new(file);
+        let de: Value = serde_json::from_reader(reader)?;
+        if let Some(Value::String(name)) = de.get("name") {
+            match name.as_str() {
+                "Trigonometric Attractor" => {
+                    self.attractor = Box::new(serde_json::from_value::<Trigonometric>(de)?);
+                },
+                "Clifford Attractor" => {
+                    self.attractor = Box::new(serde_json::from_value::<Clifford>(de)?);
+                },
+                "Quadratic Attractor" => {
+                    self.attractor = Box::new(serde_json::from_value::<Quadratic>(de)?);
+                },
+                "Symmetric Attractor" => {
+                    self.attractor = Box::new(serde_json::from_value::<Symmetric>(de)?);
+                },
+                "Polar Attractor" => {
+                    self.attractor = Box::new(serde_json::from_value::<Polar>(de)?);
+                },
+                "Lorenz Attractor" => {
+                    self.attractor = Box::new(serde_json::from_value::<Lorenz>(de)?);
+                },
+                "Duffing Attractor" => {
+                    self.attractor = Box::new(serde_json::from_value::<Duffing>(de)?);
+                },
+                "DoublePendulum" => {
+                    self.attractor = Box::new(serde_json::from_value::<DoublePendulum>(de)?);
+                },
+                _ => {
+                    return Err(anyhow!("Invald Attractor name {}.", name.clone()));
+                }
+            }
+        }
+        else {
+            return Err(anyhow!(" Attractor name NotFound."));
+        }
+        Ok(())
     }
 }
 
@@ -79,35 +133,35 @@ impl eframe::App for MyApp {
             .selected_text(format!("{:?}", self.selected_attractor))
             .show_ui(ui, |ui| {
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Trigonometric, "Trigonometric").clicked() {
-                    self.set_attractor(Box::new(Trigonometric::default()));
+                    self.set_attractor(Box::<Trigonometric>::default());
                     param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Clifford, "Clifford").clicked() {
-                    self.set_attractor(Box::new(Clifford::default()));
+                    self.set_attractor(Box::<Clifford>::default());
                     param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Quadratic, "Quadratic").clicked() {
-                    self.set_attractor(Box::new(Quadratic::default()));
+                    self.set_attractor(Box::<Quadratic>::default());
                     param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Symmetric, "Symmetric").clicked() {
-                    self.set_attractor(Box::new(Symmetric::default()));
+                    self.set_attractor(Box::<Symmetric>::default());
                     param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Polar, "Polar").clicked() {
-                    self.set_attractor(Box::new(Polar::default()));
+                    self.set_attractor(Box::<Polar>::default());
                     param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Duffing, "Duffing").clicked() {
-                    self.set_attractor(Box::new(Duffing::default()));
+                    self.set_attractor(Box::<Duffing>::default());
                     param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::Lorenz, "Lorentz").clicked() {
-                    self.set_attractor(Box::new(Lorenz::default()));
+                    self.set_attractor(Box::<Lorenz>::default());
                     param_changed |= true;
                 }
                 if ui.selectable_value(&mut self.selected_attractor, Enum::DoublePendulum, "DoublePendulum").clicked() {
-                    self.set_attractor(Box::new(DoublePendulum::default()));
+                    self.set_attractor(Box::<DoublePendulum>::default());
                     param_changed |= true;
                 }
             });
@@ -180,8 +234,8 @@ impl eframe::App for MyApp {
                 changed_left |= ui.add(
                     egui::DragValue::new(x)
                     .clamp_range(x_range.clone())
-                    .fixed_decimals(3)
-                    .speed(x_range.end() * 0.01)
+                    .fixed_decimals(4)
+                    .speed(x_range.end() * 0.001)
                     .prefix(format!("x{}:  ", i))
                 ).changed();
             }
@@ -220,6 +274,43 @@ impl eframe::App for MyApp {
                 ).changed();
             }
 
+            ui.separator();
+            if ui.add(egui::Button::new("Save Params")).clicked() {
+                let dialog = rfd::FileDialog::new()
+                    .set_file_name(self.attractor.name().replace(' ', "_"))
+                    .set_directory("/")
+                    .add_filter("JSON", &["json"])
+                    .save_file();
+                if let Some(path) = dialog {
+                    let save_result = self.save_params(&path);
+                    rfd::MessageDialog::new()
+                    .set_title("Message")
+                    .set_description(
+                        if save_result.is_ok() {format!("{:?} saved", path.file_name().unwrap())} else {"Failed to save".to_owned()}
+                    )
+                    .set_buttons(rfd::MessageButtons::Ok)
+                    .show();
+                }
+            }
+            if ui.add(egui::Button::new("Load Params")).clicked() {
+                let dialog = rfd::FileDialog::new()
+                    .add_filter("JSON", &["json"])
+                    .set_directory("/")
+                    .pick_file();
+                if let Some(path) = dialog {
+                    let load_result = self.load_params(&path);
+                    rfd::MessageDialog::new()
+                    .set_title("Message")
+                    .set_description(
+                        if load_result.is_ok() {format!("{:?} loaded", path.file_name().unwrap())} else {"Failed to load".to_owned()}
+                    )
+                    .set_buttons(rfd::MessageButtons::Ok)
+                    .show();
+                    if load_result.is_ok() {
+                        changed_left |= true;
+                    }
+                }
+            }
             param_changed |= changed_left;
         });
 
@@ -276,8 +367,8 @@ impl eframe::App for MyApp {
                 
                 if ui.add(egui::Button::new("Save Image")).clicked() {
                     let dialog = rfd::FileDialog::new()
-                        .set_file_name(self.attractor.name().replace(" ", "_"))
-                        .set_directory(&"/")
+                        .set_file_name(self.attractor.name().replace(' ', "_"))
+                        .set_directory("/")
                         .add_filter("PNG", &["png"])
                         .save_file();
                     if let Some(path) = dialog {
@@ -285,7 +376,7 @@ impl eframe::App for MyApp {
                         rfd::MessageDialog::new()
                         .set_title("Message")
                         .set_description(
-                            if let Ok(_) = save_result {format!("{:?} saved", path.file_name().unwrap())} else {"Failed to save".to_owned()}
+                            if save_result.is_ok() {format!("{:?} saved", path.file_name().unwrap())} else {"Failed to save".to_owned()}
                         )
                         .set_buttons(rfd::MessageButtons::Ok)
                         .show();

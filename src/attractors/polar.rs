@@ -1,10 +1,12 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
 use crate::state::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Polar {
     pub name: String,
     pub map_str: String,
@@ -12,7 +14,9 @@ pub struct Polar {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -24,7 +28,7 @@ impl Default for Polar {
         Self {
             name: "Polar Attractor".into(),
             map_str: "x = a0 * sin(a1 * y) + a2 * tanh(1 - y * y), y = a3 * (sin(a0 * (2 + x * x)/(2 - y * y)) - x) + a4 * x / cosh(x + y)".into(),
-            range: range,
+            range,
             speeds: vec![0.001; 5],
             coefs: vec![1.0; 5],
             state: State::new(2, -1.0..=1.0, None),

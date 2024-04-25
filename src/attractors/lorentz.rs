@@ -1,10 +1,12 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
 use crate::state::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Lorenz {
     pub name: String,
     pub map_str: String,
@@ -12,7 +14,9 @@ pub struct Lorenz {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -24,7 +28,7 @@ impl Default for Lorenz {
         Self {
             name: "Lorenz Attractor".into(),
             map_str: "dx/dt = a0 * (y - x), dy/dt = x * (a1 - z) - y, dz/dt = x * y - a3 * z".into(),
-            range: range,
+            range,
             speeds: vec![0.01; 3],
             coefs: vec![0.5; 3],
             state: State::new(3, 0.0..=20.0, Some(0.0001)),

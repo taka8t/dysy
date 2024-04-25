@@ -1,6 +1,8 @@
 use rand::{thread_rng, Rng};
+use serde::{Serialize, Deserialize};
 use std::f64::{consts::TAU};
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Palette {
     pub r: (f64, f64, f64, f64),
     pub g: (f64, f64, f64, f64),

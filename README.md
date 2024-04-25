@@ -35,7 +35,6 @@ To run the application, you&#x27;ll need to have Rust installed on your system. 
 
 ```
 git clone https://github.com/taka8t/dysy.git
-cd your_folder
 cargo run --release
 ```
 
@@ -43,7 +42,7 @@ This will launch the Egui-based GUI, where you can interact with the application
 
 ## Future Plans
 
-- save parameter and load parameter
+- ~~save parameter and load parameter (serialize / deseriarize)~~
 - Implement the ability to load a custom dynamic system from a configuration file
 - Add examples of dynamic systems (Double pendulum etc...)
 - Image generation feature that represents characteristics other than trajectories

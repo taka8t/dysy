@@ -1,10 +1,12 @@
 use rand::{thread_rng, Rng};
 use image::{RgbImage, Rgb, DynamicImage};
+use serde::{Serialize, Deserialize};
 
 use super::attractor::Attractor;
 use crate::util::Palette;
 use crate::state::State;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Trigonometric {
     pub name: String,
     pub map_str: String,
@@ -12,7 +14,9 @@ pub struct Trigonometric {
     pub speeds: Vec<f64>,
     pub coefs: Vec<f64>,
     pub state: State,
+    #[serde(skip)]
     pub img_vec: Vec<f64>,
+    #[serde(skip)]
     pub param_changed: bool,
 }
 
@@ -25,7 +29,7 @@ impl Default for Trigonometric {
         Self {
             name: "Trigonometric Attractor".into(),
             map_str: "x = sin(a0 * x^2 + a1 * xy + a2 * y^2 + a3), y = cos(a4 * x^2 + a5 * xy + a6 * y^2 + a7)".into(),
-            range: range,
+            range,
             speeds: vec![0.001; 8],
             coefs: vec![1.0; 8],
             state: State::new(2, -1.0..=1.0, None),
