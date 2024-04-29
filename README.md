@@ -40,6 +40,10 @@ cargo run --release
 
 This will launch the Egui-based GUI, where you can interact with the application and generate attractors.
 
+## Screen shot 
+
+![Screen Shot](images/screenshot.png)
+
 ## Future Plans
 
 - ~~save parameter and load parameter (serialize / deseriarize)~~

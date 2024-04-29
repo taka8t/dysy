@@ -218,10 +218,10 @@ impl eframe::App for MyApp {
 
             ui.label("map param");
             ui.label("num iter for check");
-            ui.add(
+            changed_left |= ui.add(
                 egui::Slider::new(&mut self.num_iter_low, 10000..=1000000)
                 .logarithmic(true)
-            );
+            ).changed();
 
             ui.separator();
             ui.label("Initial Values");
@@ -319,11 +319,13 @@ impl eframe::App for MyApp {
         }
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui|{
-                ui.add(
+                if ui.add(
                     egui::Slider::new(&mut self.num_iter_high, 1000000..=50000000)
                     .logarithmic(true)
                     .text("num iter for high resolution")
-                );
+                ).changed() {
+                    self.attractor.param_changed(true);
+                }
                 if ui.add(egui::Button::new("Generate")).clicked() {
                     let start = time::Instant::now();
                     let image = image2texture(
