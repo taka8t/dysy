@@ -1,6 +1,6 @@
 [package]
 name = "dysy"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["taka8 <taka87874k4@gmail.com>"]
 edition = "2021"
 
@@ -22,6 +22,7 @@ num-complex = "0.4"
 image = { version = "0.25.1", features = ["rayon"] }
 rand = "0.8.5"
 rfd = "0.14"
+lieval = "0.2.3"
 
 # native:
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

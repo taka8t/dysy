@@ -24,3 +24,6 @@ pub use polar::Polar;
 
 pub mod double_pendulum;
 pub use double_pendulum::DoublePendulum;
+
+pub mod custom;
+pub use custom::Custom;

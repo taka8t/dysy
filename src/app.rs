@@ -1,4 +1,4 @@
-use crate::attractors::{Attractor, Trigonometric, Clifford, Quadratic, Symmetric, Polar, Duffing, Lorenz, DoublePendulum};
+use crate::attractors::{Attractor, Trigonometric, Clifford, Quadratic, Symmetric, Polar, Duffing, Lorenz, DoublePendulum, Custom};
 use crate::util;
 use image::{EncodableLayout, DynamicImage};
 use serde_json::{Value};
@@ -17,7 +17,8 @@ enum Enum {
     Polar,
     Duffing,
     Lorenz,
-    DoublePendulum
+    DoublePendulum,
+    Custom,
 }
 
 pub struct MyApp {
@@ -30,6 +31,8 @@ pub struct MyApp {
     tex_handle_pre: Option<egui::TextureHandle>,
     tex_handle_high: Option<egui::TextureHandle>,
     elapsed: time::Duration,
+    expr_str: [String; 2],
+    custom_status: String,
 }
 
 impl Default for MyApp {
@@ -44,6 +47,8 @@ impl Default for MyApp {
             tex_handle_pre: None,
             tex_handle_high: None,
             elapsed: time::Duration::new(0, 0),
+            expr_str: ["a0 * sin(a1 * y) + a2 * cos(a3 * x)".to_string(), "a4 * sin(a5 * x) + a6 * cos(a7 * y)".to_string()],
+            custom_status: "".to_string()
         }
     }
 }
@@ -95,6 +100,24 @@ impl MyApp {
                 "DoublePendulum" => {
                     self.attractor = Box::new(serde_json::from_value::<DoublePendulum>(de)?);
                 },
+                "Custom" => {
+                    //self.attractor = Box::new(serde_json::from_value::<DoublePendulum>(de)?);
+                    if let Some(Value::String(map_str)) = de.get("map_str") {
+                        let custom = Custom::new(map_str);
+                        match custom {
+                            Ok(custom) => {
+                                self.attractor = Box::new(custom);
+                                self.custom_status = "OK.".to_string();
+                            }
+                            Err(e) => {
+                                self.custom_status = format!("NG: {:?}", e);
+                            }
+                        }
+                    }
+                    else {
+                        self.custom_status = format!("NG: No map_str");
+                    }
+                },
                 _ => {
                     return Err(anyhow!("Invald Attractor name {}.", name.clone()));
                 }
@@ -129,40 +152,70 @@ impl eframe::App for MyApp {
             ui.separator();
 
             // todo: 項目別に分ける
-            egui::ComboBox::from_label("Select Attractor")
-            .selected_text(format!("{:?}", self.selected_attractor))
-            .show_ui(ui, |ui| {
-                if ui.selectable_value(&mut self.selected_attractor, Enum::Trigonometric, "Trigonometric").clicked() {
-                    self.set_attractor(Box::<Trigonometric>::default());
-                    param_changed |= true;
-                }
-                if ui.selectable_value(&mut self.selected_attractor, Enum::Clifford, "Clifford").clicked() {
-                    self.set_attractor(Box::<Clifford>::default());
-                    param_changed |= true;
-                }
-                if ui.selectable_value(&mut self.selected_attractor, Enum::Quadratic, "Quadratic").clicked() {
-                    self.set_attractor(Box::<Quadratic>::default());
-                    param_changed |= true;
-                }
-                if ui.selectable_value(&mut self.selected_attractor, Enum::Symmetric, "Symmetric").clicked() {
-                    self.set_attractor(Box::<Symmetric>::default());
-                    param_changed |= true;
-                }
-                if ui.selectable_value(&mut self.selected_attractor, Enum::Polar, "Polar").clicked() {
-                    self.set_attractor(Box::<Polar>::default());
-                    param_changed |= true;
-                }
-                if ui.selectable_value(&mut self.selected_attractor, Enum::Duffing, "Duffing").clicked() {
-                    self.set_attractor(Box::<Duffing>::default());
-                    param_changed |= true;
-                }
-                if ui.selectable_value(&mut self.selected_attractor, Enum::Lorenz, "Lorentz").clicked() {
-                    self.set_attractor(Box::<Lorenz>::default());
-                    param_changed |= true;
-                }
-                if ui.selectable_value(&mut self.selected_attractor, Enum::DoublePendulum, "DoublePendulum").clicked() {
-                    self.set_attractor(Box::<DoublePendulum>::default());
-                    param_changed |= true;
+            ui.horizontal(|ui|{
+                egui::ComboBox::from_label("Select Attractor")
+                .selected_text(format!("{:?}", self.selected_attractor))
+                .show_ui(ui, |ui| {
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Trigonometric, "Trigonometric").clicked() {
+                        self.set_attractor(Box::<Trigonometric>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Clifford, "Clifford").clicked() {
+                        self.set_attractor(Box::<Clifford>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Quadratic, "Quadratic").clicked() {
+                        self.set_attractor(Box::<Quadratic>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Symmetric, "Symmetric").clicked() {
+                        self.set_attractor(Box::<Symmetric>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Polar, "Polar").clicked() {
+                        self.set_attractor(Box::<Polar>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Duffing, "Duffing").clicked() {
+                        self.set_attractor(Box::<Duffing>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Lorenz, "Lorentz").clicked() {
+                        self.set_attractor(Box::<Lorenz>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::DoublePendulum, "DoublePendulum").clicked() {
+                        self.set_attractor(Box::<DoublePendulum>::default());
+                        param_changed |= true;
+                    }
+                    if ui.selectable_value(&mut self.selected_attractor, Enum::Custom, "Custom").clicked() {
+                        self.set_attractor(Box::<Custom>::default());
+                        let arr: Vec<&str> = self.attractor.map_str().split(";").collect();
+                        self.expr_str = [arr[0].to_string(), arr[1].to_string()];
+                        param_changed |= true;
+                        
+                    }
+                });
+                if self.selected_attractor == Enum::Custom {
+                    ui.label("x:");
+                    ui.text_edit_singleline(&mut self.expr_str[0]);
+                    ui.label("y:");
+                    ui.text_edit_singleline(&mut self.expr_str[1]);
+                    
+                    if ui.add(egui::Button::new("Apply")).clicked() {
+                        let custom = Custom::new(&self.expr_str.join(";"));
+                        match custom {
+                            Ok(custom) => {
+                                self.attractor = Box::new(custom);
+                                param_changed |= true;
+                                self.custom_status = "OK.".to_string();
+                            }
+                            Err(e) => {
+                                self.custom_status = format!("NG: {:?}", e);
+                            }
+                        }
+                    }
+                    ui.label(format!("Status: {}", &self.custom_status));
                 }
             });
 
