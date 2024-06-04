@@ -793,7 +793,7 @@ checksum = "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2"
 
 [[package]]
 name = "dysy"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "anyhow",
  "eframe",
@@ -1198,6 +1198,15 @@ dependencies = [
  "pin-project-lite",
  "pin-utils",
  "slab",
+]
+
+[[package]]
+name = "fxhash"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
+dependencies = [
+ "byteorder",
 ]
 
 [[package]]
@@ -1606,9 +1615,12 @@ dependencies = [
 
 [[package]]
 name = "lieval"
-version = "0.2.3"
+version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1405feebc42ef2e4084a37ce6b6f8c7cf8ea21596c511cd2c03598a85c14952"
+checksum = "e872c923ab0a53efc251b0d26a622ad587ba6e36e027186d26bae79a5930bf9b"
+dependencies = [
+ "fxhash",
+]
 
 [[package]]
 name = "linux-raw-sys"
